@@ -1,253 +1,275 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Crane Dreamscape — Floating Cranes</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <title>Crane Dreamscape — Fullscreen</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <style>
-    body{margin:0;font-family:Inter, Roboto, Arial;background:linear-gradient(180deg,#f0fbf9,#ffffff);color:#023}
-    header{background:linear-gradient(90deg,#2b8a76,#0b6a59);color:white;padding:18px;text-align:center;font-weight:700}
-    .ui{max-width:980px;margin:14px auto;padding:12px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
-    .panel{background:white;padding:14px;border-radius:12px;box-shadow:0 8px 30px rgba(10,30,30,0.06);flex:1;min-width:280px}
-    label{display:block;font-weight:600;color:#0b6a59;margin-bottom:6px}
-    input[type="text"], textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #ccd;box-sizing:border-box}
-    input[type="file"]{width:100%}
-    button{background:#0b6a59;color:white;padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
-    #canvas-container{max-width:1200px;margin:14px auto;border-radius:12px;overflow:hidden}
-    small{color:#336}
-    #status{margin-top:8px;color:#046}
-    .hint{font-size:13px;color:#667}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#f0fbf9,#ffffff);font-family:Inter,Roboto,Arial}
+    #ui {
+      position:fixed; right:18px; top:18px; z-index:999;
+      background:rgba(255,255,255,0.9); border-radius:10px; padding:12px; box-shadow:0 8px 30px rgba(0,0,0,0.08);
+      backdrop-filter: blur(4px);
+      width:320px;
+    }
+    #ui h3{margin:0 0 8px 0;color:#0b6a59;font-size:16px}
+    label{display:block;font-size:13px;color:#0b6a59;margin-bottom:6px;font-weight:600}
+    input[type=text], textarea{width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid #d5e; margin-bottom:8px}
+    input[type=file]{width:100%; margin-bottom:8px}
+    button{background:#0b6a59;color:white;padding:9px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
+    #status{font-size:13px;color:#046;margin-top:8px;min-height:18px}
+    #overlayInfo {
+      position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+      background:white; padding:14px; border-radius:12px; box-shadow:0 14px 48px rgba(0,0,0,0.25);
+      max-width:520px; z-index:1001; display:none;
+    }
+    #overlayInfo img{max-width:100%; border-radius:8px; display:block; margin-bottom:10px}
+    #closeOverlay{background:#eee;border-radius:8px;padding:6px 10px;border:0;cursor:pointer}
+    #help {position:fixed; left:18px; bottom:18px; z-index:999; background:rgba(255,255,255,0.9); padding:10px; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.06)}
+    .hint{font-size:12px;color:#445}
   </style>
 </head>
 <body>
-  <header>Crane Dreamscape — Upload & Watch</header>
-
-  <div class="ui">
-    <div class="panel">
-      <h3 style="margin-top:0">Share your found crane</h3>
-      <div>
-        <label for="crane">Crane ID (e.g. C001)</label>
-        <input id="crane" type="text" placeholder="C001">
-      </div>
-      <div>
-        <label for="name">Name (optional)</label>
-        <input id="name" type="text" placeholder="Give your crane a name">
-      </div>
-      <div>
-        <label for="message">Message (optional)</label>
-        <textarea id="message" rows="3" placeholder="A short note..."></textarea>
-      </div>
-      <div>
-        <label for="file">Photo</label>
-        <input id="file" type="file" accept="image/*">
-      </div>
-      <div style="margin-top:10px;display:flex;gap:8px">
-        <button id="uploadBtn">Upload</button>
-        <button id="refreshBtn" style="background:#2a5">Refresh</button>
-      </div>
-      <div id="status" class="hint">Status: idle</div>
-      <p class="hint" style="margin-top:10px">Uploads are stored on Drive and used by everyone who visits this page.</p>
+  <div id="ui">
+    <h3>Share a found crane</h3>
+    <label for="craneId">Crane ID (e.g. C001)</label>
+    <input id="craneId" type="text" placeholder="C001">
+    <label for="name">Name (optional)</label>
+    <input id="name" type="text" placeholder="A little friend">
+    <label for="message">Message (optional)</label>
+    <textarea id="message" rows="3" placeholder="A short note..."></textarea>
+    <label for="file">Photo</label>
+    <input id="file" type="file" accept="image/*">
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button id="uploadBtn">Upload</button>
+      <button id="refreshBtn" style="background:#2a5">Refresh</button>
     </div>
+    <div id="status" class="hint">Status: idle</div>
+  </div>
 
-    <div class="panel" style="flex:1.6">
-      <h3 style="margin-top:0">Stage</h3>
-      <div id="canvas-container"></div>
-      <small class="hint">Click a crane for details (and a chime). Drag cranes to reposition them.</small>
+  <div id="help" class="hint">Click a floating crane for details & a chime. Drag to reposition.</div>
+
+  <div id="overlayInfo">
+    <div id="overlayContent"></div>
+    <div style="text-align:right;margin-top:8px">
+      <button id="closeOverlay">Close</button>
     </div>
   </div>
 
 <script>
-/* ------------- CONFIG ------------- */
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzt6GUKLQl_1NY4yzh7Qi9uz2BtfvfPhmoQxElJ88sWyM7mSzKSmBAQcLZGcShT248/exec"; // e.g. https://script.google.com/macros/s/.../exec
-/* ---------------------------------- */
+/* ------------------------
+   Edit this: replace with your deployed Apps Script URL
+   Example: "https://script.google.com/macros/s/AKfy.../exec"
+   ------------------------ */
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzt6GUKLQl_1NY4yzh7Qi9uz2BtfvfPhmoQxElJ88sWyM7mSzKSmBAQcLZGcShT248/exec";
+/* ------------------------ */
 
-const CHIME_FREQ = 880; // chime frequency
-let synthCtx;
+if (!WEBAPP_URL || WEBAPP_URL.indexOf('REPLACE_WITH') !== -1) {
+  console.warn('Please set WEBAPP_URL to your Apps Script web app URL before using uploads/load.');
+}
 
-/* ---------- uploader logic ---------- */
-document.getElementById('uploadBtn').addEventListener('click', async () => {
-  const crane = document.getElementById('crane').value.trim();
-  const name = document.getElementById('name').value.trim();
-  const message = document.getElementById('message').value.trim();
-  const fileInput = document.getElementById('file');
-  const status = document.getElementById('status');
+/* ---------- Helpers ---------- */
+function logStatus(msg){ document.getElementById('status').innerText = 'Status: ' + msg; }
 
-  if (!crane) { status.innerText = 'Status: Enter a crane ID (C001)'; return; }
-  if (!fileInput.files.length) { status.innerText = 'Status: Select a photo to upload'; return; }
-
-  status.innerText = 'Status: Reading file...';
-  const file = fileInput.files[0];
-  const dataURL = await fileToDataURL(file);
-
-  // Build payload
-  const payload = {
-    action: 'upload',
-    crane: crane,
-    name: name,
-    message: message,
-    imageData: dataURL
-  };
-
-  status.innerText = 'Status: Uploading...';
-  try {
-    const resp = await fetch(WEBAPP_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' }
-    });
-    const json = await resp.json();
-    if (json.success) {
-      status.innerText = 'Status: Uploaded — saved to Drive.';
-      // refresh sketch data
-      await loadEntriesThenUpdate();
-      // clear form lightly
-      document.getElementById('file').value = '';
-      setTimeout(()=> { status.innerText = 'Status: idle'; }, 2000);
-    } else {
-      status.innerText = 'Status: Upload failed: ' + (json.error || 'unknown');
-    }
-  } catch (err) {
-    console.error(err);
-    status.innerText = 'Status: Upload error (see console)';
-  }
-});
-
-function fileToDataURL(file) {
+/* Convert file to base64 (DataURL), then strip prefix to get raw base64 */
+function fileToBase64Str(file){
   return new Promise((resolve, reject) => {
     const fr = new FileReader();
-    fr.onload = () => resolve(fr.result);
+    fr.onload = () => {
+      const data = fr.result; // data:image/png;base64,....
+      const comma = data.indexOf(',');
+      if (comma === -1) return resolve(data);
+      resolve(data.slice(comma+1)); // raw base64
+    };
     fr.onerror = reject;
     fr.readAsDataURL(file);
   });
 }
 
-/* ---------- p5 sketch + scene ---------- */
-let sprites = []; // will hold {img, x,y,w,h, vx, vy, angle, name,msg,ts, id, trail}
-let canvasParent;
-let cnv;
-
-function loadEntriesThenUpdate(){
-  // fetch list via ?action=list
-  return fetch(`${WEBAPP_URL}?action=list`)
-    .then(res => res.json())
-    .then(j => {
-      if (!j.success) return;
-      // transform into sprite data (but keep existing sprites where same photo URL)
-      const items = j.items || [];
-      // We'll create new sprites for items that have a photo_url
-      const newPhotos = items.filter(it => it.photo_url).map(it => ({
-        photo_url: it.photo_url,
-        crane_id: it.crane_id || '',
-        name: it.name || '',
-        message: it.message || '',
-        ts: it.timestamp || it.timestamp // keep whichever
-      }));
-      // Remove duplicates by URL
-      const unique = [];
-      const seen = new Set();
-      newPhotos.forEach(p => {
-        if (p.photo_url && !seen.has(p.photo_url)) { seen.add(p.photo_url); unique.push(p); }
-      });
-      // Load images (asynchronously) and add sprites for those not present
-      unique.forEach(p => {
-        if (!sprites.find(s => s.sourceUrl === p.photo_url)) {
-          // load as p5 Image using loadImage
-          loadImage(p.photo_url, img => {
-            // scale
-            const maxDim = 160;
-            let w = img.width, h = img.height;
-            const scale = min(maxDim/w, maxDim/h, 1);
-            w = Math.round(w * scale); h = Math.round(h * scale);
-            const s = {
-              id: 'srv_' + Math.floor(Math.random()*999999),
-              sourceUrl: p.photo_url,
-              img: img,
-              x: random(w/2 + 20, width - w/2 - 20),
-              y: random(h/2 + 20, height - h/2 - 20),
-              w: w, h: h,
-              vx: random(-0.6,0.6), vy: random(-0.4,0.4),
-              angle: random(-0.3,0.3),
-              noiseX: random(1000), noiseY: random(2000),
-              name: p.name || p.crane_id || '',
-              msg: p.message || '',
-              ts: p.ts || (new Date()).toISOString(),
-              trail: [] // array of {x,y,life}
-            };
-            sprites.push(s);
-          }, err => {
-            console.warn('img load err', p.photo_url, err);
-          });
-        }
-      });
-    }).catch(err => {
-      console.error('list fetch err', err);
-    });
+/* POST form-url-encoded (so Apps Script e.parameter sees it) */
+async function postBase64(base64Str, craneId){
+  // Build payload as form-urlencoded
+  const body = new URLSearchParams();
+  body.append('file', base64Str);
+  body.append('craneId', craneId || '');
+  const resp = await fetch(WEBAPP_URL, {
+    method: 'POST',
+    body: body
+  });
+  return resp.json();
 }
 
-function setup() {
-  canvasParent = select('#canvas-container');
-  cnv = createCanvas(canvasParent.width, 540);
-  cnv.parent('canvas-container');
+/* ---------- p5 sketch variables ---------- */
+let sprites = []; // {img, x,y,w,h, vx,vy, angle, noiseX, noiseY, name, msg, ts, url}
+let canvasEl;
+let canvasParentWidth = window.innerWidth;
+let canvasParentHeight = window.innerHeight;
+
+/* ---------- load list of uploaded images from Apps Script (GET returns JSON array of URLs) ---------- */
+async function fetchDriveList(){
+  if (!WEBAPP_URL || WEBAPP_URL.indexOf('REPLACE_WITH') !== -1) return [];
+  try {
+    const u = WEBAPP_URL;
+    const r = await fetch(u);
+    const json = await r.json();
+    // If your Apps Script returns an array (as in the simple example), json is array
+    // If your script returns { ... } wrap, handle both
+    if (Array.isArray(json)) return json;
+    if (json && json.items) return json.items;
+    // If script returned {ok:true} or similar, try to parse content as array if present
+    if (json && json.success && json.items) return json.items.map(it => it.photo_url || it.url).filter(Boolean);
+    // fallback: if json is object with urls array
+    if (json && json.urls) return json.urls;
+    return [];
+  } catch (err) {
+    console.warn('fetchDriveList error', err);
+    return [];
+  }
+}
+
+/* ---------- p5 setup/draw ---------- */
+function setup(){
+  const cnv = createCanvas(windowWidth, windowHeight);
+  cnv.position(0,0);
+  cnv.style('display','block');
   pixelDensity(1);
-  // initial load
-  loadEntriesThenUpdate();
+  imageMode(CENTER);
+  // initial load of Drive images
+  loadServerImages();
   // periodic refresh
-  setInterval(loadEntriesThenUpdate, 20000); // every 20s
+  setInterval(loadServerImages, 20000);
 }
 
 function windowResized(){
-  const w = canvasParent.width;
-  resizeCanvas(w, max(360, floor(windowHeight * 0.6)));
+  resizeCanvas(windowWidth, windowHeight);
 }
 
-function draw() {
-  // background soft gradient
+/* create sprite from loaded image */
+function makeSpriteFromP5Image(img, meta){
+  const maxDim = 180;
+  let w = img.width, h = img.height;
+  const scale = Math.min(maxDim/w, maxDim/h, 1);
+  w = Math.round(w * scale); h = Math.round(h * scale);
+  return {
+    img,
+    x: random(w/2 + 20, width - w/2 - 20),
+    y: random(h/2 + 20, height - h/2 - 20),
+    w, h,
+    vx: random(-0.6,0.6), vy: random(-0.4,0.4),
+    angle: random(-0.3,0.3),
+    noiseX: random(1000), noiseY: random(2000),
+    name: meta && meta.name ? meta.name : '',
+    msg: meta && meta.msg ? meta.msg : '',
+    ts: meta && meta.ts ? meta.ts : (new Date()).toISOString(),
+    url: meta && meta.url ? meta.url : '',
+    trail: []
+  };
+}
+
+/* loads server images and adds sprites for new ones */
+async function loadServerImages(){
+  logStatus('Loading server images...');
+  const list = await fetchDriveList();
+  // normalize to array of direct urls
+  const urls = list.map(u => {
+    // if item is object (Drive file object) try to extract url
+    if (typeof u === 'string') return u;
+    if (u && u.photo_url) return u.photo_url;
+    if (u && u.url) return u.url;
+    return null;
+  }).filter(Boolean);
+
+  // For each url not already present, load an image and add sprite
+  for (const url of urls){
+    if (sprites.find(s => s.url === url)) continue;
+    // Drive file URLs sometimes redirect to a Drive preview page. To force direct image content,
+    // convert "https://drive.google.com/file/d/FILEID/view?usp=sharing" to:
+    // "https://drive.google.com/uc?export=view&id=FILEID"
+    let direct = url;
+    const m = url.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+    if (m && m[1]) {
+      direct = `https://drive.google.com/uc?export=view&id=${m[1]}`;
+    } else {
+      // also handle "open?id=ID" style
+      const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+      if (m2 && m2[1]) direct = `https://drive.google.com/uc?export=view&id=${m2[1]}`;
+    }
+    // loadImage async
+    try {
+      await new Promise((res, rej) => {
+        loadImage(direct, p5img => {
+          const spr = makeSpriteFromP5Image(p5img, { url: url });
+          sprites.push(spr);
+          res();
+        }, err => {
+          console.warn('img load fail', url, err);
+          res(); // don't reject, just continue
+        });
+      });
+    } catch(e){ console.warn('load err', e); }
+  }
+  logStatus('idle');
+}
+
+/* draw loop */
+function draw(){
+  // subtle background gradient
   for (let i = 0; i < height; i++) {
     const t = map(i, 0, height, 0, 1);
-    const r = lerp(248, 255, t);
-    const g = lerp(252, 255, t);
-    const b = lerp(251, 255, t);
-    stroke(r, g, b);
+    stroke(lerp(248,255,t), lerp(252,255,t), lerp(251,255,t));
     line(0, i, width, i);
   }
 
-  // update & render sprites
-  for (let i = 0; i < sprites.length; i++) {
+  // update & draw sprites
+  for (let i = 0; i < sprites.length; i++){
     const s = sprites[i];
-    // Perlin noise drift
-    s.noiseX += 0.003 + (i%4)*0.0005;
-    s.noiseY += 0.003 + (i%3)*0.0006;
+    s.noiseX += 0.002 + (i%4)*0.0003;
+    s.noiseY += 0.002 + (i%3)*0.0004;
     const nx = noise(s.noiseX + frameCount*0.001);
-    const ny = noise(s.noiseY + 1000 + frameCount*0.001);
-    s.vx += map(nx,0,1,-0.25,0.25);
-    s.vy += map(ny,0,1,-0.16,0.16);
-    // cap velocities
+    const ny = noise(s.noiseY + frameCount*0.001 + 3000);
+    s.vx += map(nx,0,1,-0.22,0.22);
+    s.vy += map(ny,0,1,-0.14,0.14);
     s.vx *= 0.96; s.vy *= 0.96;
     s.x += s.vx; s.y += s.vy;
-    s.angle += 0.002 * ((i%2) ? 1 : -1);
+    s.angle += 0.0015 * ((i%2)?1:-1);
 
-    // keep inside canvas
-    if (s.x < s.w*0.45) { s.x = s.w*0.45; s.vx *= -0.6; }
-    if (s.x > width - s.w*0.45) { s.x = width - s.w*0.45; s.vx *= -0.6; }
-    if (s.y < s.h*0.45) { s.y = s.h*0.45; s.vy *= -0.6; }
-    if (s.y > height - s.h*0.45) { s.y = height - s.h*0.45; s.vy *= -0.6; }
+    // bounds
+    if (s.x < s.w*0.45){ s.x = s.w*0.45; s.vx *= -0.6; }
+    if (s.x > width - s.w*0.45){ s.x = width - s.w*0.45; s.vx *= -0.6; }
+    if (s.y < s.h*0.45){ s.y = s.h*0.45; s.vy *= -0.6; }
+    if (s.y > height - s.h*0.45){ s.y = height - s.h*0.45; s.vy *= -0.6; }
 
-    // trails: push current pos
-    s.trail.push({x: s.x, y: s.y, life: 1.0});
-    if (s.trail.length > 20) s.trail.shift();
-    // draw trail particles (sparkly)
-    noStroke();
-    for (let t = 0; t < s.trail.length; t++) {
-      const p = s.trail[t];
-      const alpha = map(t, 0, s.trail.length-1, 20, 180);
-      fill(255, 230, 200, alpha * 0.9);
-      ellipse(p.x, p.y, (s.w*0.18) * (t/s.trail.length + 0.2));
-      fill(255,255,255, alpha*0.6);
-      ellipse(p.x + 3*Math.sin(t*0.6 + frameCount*0.02), p.y + 3*Math.cos(t*0.4 + frameCount*0.02), 2);
+    // mild separation
+    for (let j = 0; j < sprites.length; j++){
+      if (i===j) continue;
+      const o = sprites[j];
+      const dx = s.x - o.x, dy = s.y - o.y;
+      const d = sqrt(dx*dx + dy*dy);
+      const minD = (s.w + o.w) * 0.28;
+      if (d < minD && d > 0.1){
+        const push = (minD - d) * 0.02;
+        s.x += (dx/d) * push;
+        s.y += (dy/d) * push;
+      }
     }
 
-    // draw sprite image
+    // push trail
+    s.trail.push({x: s.x, y: s.y});
+    if (s.trail.length > 20) s.trail.shift();
+
+    // draw sparkly trail
+    noStroke();
+    for (let t = 0; t < s.trail.length; t++){
+      const p = s.trail[t];
+      const alpha = map(t,0,s.trail.length-1, 8, 160);
+      fill(255, 230, 200, alpha * 0.9);
+      ellipse(p.x, p.y, (s.w*0.12) * (t/s.trail.length + 0.2));
+      fill(255,255,255, alpha*0.6);
+      ellipse(p.x + 3*sin(t*0.6 + frameCount*0.02), p.y + 3*cos(t*0.4 + frameCount*0.02), 2);
+    }
+
+    // draw image
     push();
     translate(s.x, s.y);
     rotate(s.angle);
@@ -255,87 +277,146 @@ function draw() {
     image(s.img, 0, 0, s.w, s.h);
     pop();
 
-    // subtle shadow
-    noStroke();
-    fill(0, 10);
-    ellipse(s.x, s.y + s.h*0.48, s.w*0.9, s.h*0.18);
+    // shadow
+    noStroke(); fill(0, 6);
+    ellipse(s.x, s.y + s.h*0.48, s.w*0.92, s.h*0.18);
   }
 
-  // draw count
-  fill(10, 60);
-  noStroke();
-  textSize(13);
-  textAlign(LEFT, TOP);
-  text(`${sprites.length} cranes`, 8, 8);
+  // HUD: count
+  noStroke(); fill(6,60); textSize(13); textAlign(LEFT, TOP);
+  text(sprites.length + ' cranes', 12, 12);
 }
 
-/* --------- interactions: clicking and dragging ---------- */
-let dragTarget = null;
-let offsetX = 0, offsetY = 0;
-function mousePressed() {
-  // find topmost sprite under mouse
-  for (let i = sprites.length-1; i >= 0; i--) {
+/* ---------- dragging & clicking ---------- */
+let drag = null, dragOffsetX = 0, dragOffsetY = 0;
+
+function mousePressed(){
+  for (let i = sprites.length -1; i >= 0; i--){
     const s = sprites[i];
     const dx = mouseX - s.x, dy = mouseY - s.y;
-    const d = sqrt(dx*dx + dy*dy);
-    if (d < max(s.w, s.h)*0.6) {
-      // if click -> start drag, and also play chime & show small info bubble (native alert)
-      dragTarget = s;
-      offsetX = s.x - mouseX;
-      offsetY = s.y - mouseY;
+    const dist = sqrt(dx*dx + dy*dy);
+    if (dist < max(s.w, s.h) * 0.6){
+      drag = s;
+      dragOffsetX = s.x - mouseX;
+      dragOffsetY = s.y - mouseY;
+      // bring to front
+      sprites.splice(i,1);
+      sprites.push(drag);
+      // chime and overlay
       playChime();
-      showInfoBubble(s);
-      return false; // prevent default
+      showOverlayForSprite(s);
+      return false;
     }
   }
 }
 
-function mouseDragged() {
-  if (dragTarget) {
-    dragTarget.x = mouseX + offsetX;
-    dragTarget.y = mouseY + offsetY;
+function mouseDragged(){
+  if (drag){
+    drag.x = mouseX + dragOffsetX;
+    drag.y = mouseY + dragOffsetY;
   }
 }
 
-function mouseReleased() {
-  dragTarget = null;
+function mouseReleased(){
+  drag = null;
 }
 
-/* simple info small overlay */
-function showInfoBubble(s) {
-  const info = `${s.name || 'Unnamed'}\n${s.msg || ''}\nFound: ${new Date(s.ts).toLocaleString()}`;
-  // small overlay using alert for simplicity
-  alert(info);
-}
+/* touch for mobile */
+function touchStarted(){ return mousePressed(); }
+function touchMoved(){ mouseDragged(); return false; }
+function touchEnded(){ mouseReleased(); return false; }
 
-/* --------- chime (WebAudio) ---------- */
-function playChime() {
-  try {
-    if (!synthCtx) synthCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const t = synthCtx.currentTime;
-    const o = synthCtx.createOscillator();
-    const g = synthCtx.createGain();
-    o.type = 'sine';
-    o.frequency.value = CHIME_FREQ;
-    g.gain.value = 0;
-    o.connect(g);
-    g.connect(synthCtx.destination);
-    o.start(t);
-    // quick envelope
-    g.gain.linearRampToValueAtTime(0.15, t + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
-    o.stop(t + 0.8);
-  } catch (e) {
-    console.warn('audio fail', e);
-  }
+/* ---------- overlay & chime ---------- */
+function showOverlayForSprite(s){
+  const overlay = document.getElementById('overlayInfo');
+  const cont = document.getElementById('overlayContent');
+  cont.innerHTML = `
+    <img src="${s.url}" alt="crane">
+    <h3 style="margin:6px 0">${escapeHtml(s.name) || 'Unnamed crane'}</h3>
+    <p style="margin:0 0 6px">${escapeHtml(s.msg) || '<i>No message</i>'}</p>
+    <small>Found: ${new Date(s.ts).toLocaleString()}</small>
+  `;
+  overlay.style.display = 'block';
 }
-
-/* ------------- manual refresh ------------- */
-document.getElementById('refreshBtn').addEventListener('click', async () => {
-  document.getElementById('status').innerText = 'Status: refreshing...';
-  await loadEntriesThenUpdate();
-  document.getElementById('status').innerText = 'Status: idle';
+document.getElementById('closeOverlay').addEventListener('click', ()=> {
+  document.getElementById('overlayInfo').style.display = 'none';
 });
+
+/* chime via WebAudio */
+let audioCtx = null;
+function playChime(){
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(880, t);
+    g.gain.setValueAtTime(0, t);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t);
+    g.gain.linearRampToValueAtTime(0.15, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+    o.stop(t + 0.7);
+  } catch(e){
+    // fail silently if audio blocked
+  }
+}
+
+/* ---------- upload UI handlers ---------- */
+document.getElementById('uploadBtn').addEventListener('click', async () => {
+  const fileEl = document.getElementById('file');
+  const craneId = document.getElementById('craneId').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const msg = document.getElementById('message').value.trim();
+
+  if (!fileEl.files.length) { logStatus('choose a photo'); return; }
+  if (!craneId) { logStatus('enter a crane id (e.g. C001)'); return; }
+
+  logStatus('reading file...');
+  const rawBase64 = await fileToBase64Str(fileEl.files[0]); // raw base64 (no prefix)
+  logStatus('uploading...');
+  try {
+    // POST base64 as form data so Apps Script receives e.parameter.file
+    const body = new URLSearchParams();
+    body.append('file', rawBase64);
+    body.append('craneId', craneId);
+    // optionally include name/message in params (Apps Script code you used earlier may not handle them;
+    // if you want them recorded in Sheets, use the fuller Apps Script variant that accepts JSON)
+    body.append('name', name);
+    body.append('message', msg);
+
+    const res = await fetch(WEBAPP_URL, { method: 'POST', body: body });
+    const json = await res.json();
+    if (json.success) {
+      logStatus('uploaded — reloading images...');
+      // clear inputs
+      fileEl.value = '';
+      document.getElementById('name').value = '';
+      document.getElementById('message').value = '';
+      document.getElementById('craneId').value = '';
+      // reload list (add small delay)
+      setTimeout(loadServerImages, 1200);
+    } else {
+      logStatus('upload error: ' + (json.error || 'unknown'));
+      console.warn('upload resp', json);
+    }
+  } catch (err) {
+    console.error(err);
+    logStatus('upload failed (see console)');
+  }
+});
+
+/* manual refresh button */
+document.getElementById('refreshBtn').addEventListener('click', async () => {
+  logStatus('refreshing...');
+  await loadServerImages();
+  logStatus('idle');
+});
+
+/* ---------- utility ---------- */
+function escapeHtml(str){ if(!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 </script>
 </body>
 </html>
