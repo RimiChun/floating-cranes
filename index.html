@@ -1,245 +1,119 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>Crane Hunt — Floating Finds (p5)</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <title>Crane Dreamscape — Floating Cranes</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <style>
-    :root{
-      --teal:#00796b; --bg1:#e6f7f3; --bg2:#ffffff;
-    }
-    body{margin:0;font-family:Inter, Roboto, Arial, sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2)); color:#033;}
-    header{background:linear-gradient(90deg,var(--teal),#2e8b7b); color:white;padding:18px 20px;text-align:center;font-size:20px;font-weight:700;}
-    .ui{display:flex;gap:12px;padding:12px;align-items:center;flex-wrap:wrap;justify-content:center}
-    .card{background:white;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(20,40,40,0.08);max-width:980px;margin:14px auto}
-    label{display:block;font-weight:600;color:var(--teal);margin-bottom:6px}
+    body{margin:0;font-family:Inter, Roboto, Arial;background:linear-gradient(180deg,#f0fbf9,#ffffff);color:#023}
+    header{background:linear-gradient(90deg,#2b8a76,#0b6a59);color:white;padding:18px;text-align:center;font-weight:700}
+    .ui{max-width:980px;margin:14px auto;padding:12px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .panel{background:white;padding:14px;border-radius:12px;box-shadow:0 8px 30px rgba(10,30,30,0.06);flex:1;min-width:280px}
+    label{display:block;font-weight:600;color:#0b6a59;margin-bottom:6px}
     input[type="text"], textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #ccd;box-sizing:border-box}
-    input[type="file"]{display:block}
-    button{background:var(--teal);color:white;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
-    #canvas-holder{max-width:1200px;margin:12px auto;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(5,20,20,0.08)}
-    .controls{display:flex;gap:10px;align-items:center}
-    small{color:#446}
-    .info-popup{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:white;padding:16px;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,0.25);z-index:999;max-width:92%;width:420px}
-    .info-popup img{max-width:100%;border-radius:8px;display:block;margin-bottom:8px}
-    .close-btn{background:#eee;border-radius:8px;padding:6px 10px;border:0;cursor:pointer}
-    footer{max-width:980px;margin:12px auto;color:#245}
+    input[type="file"]{width:100%}
+    button{background:#0b6a59;color:white;padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
+    #canvas-container{max-width:1200px;margin:14px auto;border-radius:12px;overflow:hidden}
+    small{color:#336}
+    #status{margin-top:8px;color:#046}
+    .hint{font-size:13px;color:#667}
   </style>
 </head>
 <body>
-  <header>Crane Hunt — Floating Finds</header>
+  <header>Crane Dreamscape — Upload & Watch</header>
 
-  <div class="card">
-    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:space-between">
+  <div class="ui">
+    <div class="panel">
+      <h3 style="margin-top:0">Share your found crane</h3>
       <div>
-        <h2 style="margin:0;color:#044">Upload a photo of your found crane</h2>
-        <small>Photos float around the stage — click a crane to read the name/message.</small>
+        <label for="crane">Crane ID (e.g. C001)</label>
+        <input id="crane" type="text" placeholder="C001">
       </div>
-      <div class="controls">
-        <button id="downloadJSON">Download JSON</button>
-        <button id="clearAll" style="background:#c44">Clear All (local)</button>
-      </div>
-    </div>
-
-    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 260px;gap:12px">
       <div>
-        <label for="photo">Choose a photo</label>
-        <input id="photo" type="file" accept="image/*">
-        <label for="name">Name your crane (optional)</label>
-        <input id="name" type="text" placeholder="C001 - Park Crane">
+        <label for="name">Name (optional)</label>
+        <input id="name" type="text" placeholder="Give your crane a name">
+      </div>
+      <div>
         <label for="message">Message (optional)</label>
         <textarea id="message" rows="3" placeholder="A short note..."></textarea>
-        <div style="margin-top:10px;display:flex;gap:8px">
-          <button id="addBtn">Add Crane</button>
-          <div style="align-self:center;color:#556"><small id="statusHint"></small></div>
-        </div>
       </div>
+      <div>
+        <label for="file">Photo</label>
+        <input id="file" type="file" accept="image/*">
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button id="uploadBtn">Upload</button>
+        <button id="refreshBtn" style="background:#2a5">Refresh</button>
+      </div>
+      <div id="status" class="hint">Status: idle</div>
+      <p class="hint" style="margin-top:10px">Uploads are stored on Drive and used by everyone who visits this page.</p>
+    </div>
 
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="background:#fbfffd;border-radius:8px;padding:10px;flex:1">
-          <strong>Tips</strong>
-          <ul style="margin:8px 0 0 18px">
-            <li>Upload a clear photo — phone photos are perfect.</li>
-            <li>Use a short name so popups look tidy.</li>
-            <li>Submissions are stored locally in this browser. Use <em>Download JSON</em> to collect data.</li>
-          </ul>
-        </div>
-        <div style="background:#fff;border-radius:8px;padding:10px">
-          <strong>Controls</strong>
-          <p style="margin:6px 0"><small>Click a floating crane to open its details. Drag canvas to pan? No — just enjoy the motion!</small></p>
-        </div>
-      </div>
+    <div class="panel" style="flex:1.6">
+      <h3 style="margin-top:0">Stage</h3>
+      <div id="canvas-container"></div>
+      <small class="hint">Click a crane for details (and a chime). Drag cranes to reposition them.</small>
     </div>
   </div>
-
-  <div id="canvas-holder" class="card">
-    <!-- p5 canvas goes here -->
-  </div>
-
-  <div class="card" style="text-align:center">
-    <small>Local counts: <span id="count">0</span> cranes</small>
-  </div>
-
-  <div id="popup" class="info-popup" style="display:none">
-    <div id="popupContent"></div>
-    <div style="text-align:right;margin-top:8px">
-      <button class="close-btn" id="closePopup">Close</button>
-    </div>
-  </div>
-
-  <footer style="text-align:center"><small>Made for your Crane Hunt — demo by assistant</small></footer>
 
 <script>
-/* =========================
-   p5 sketch + app logic
-   ========================= */
+/* ------------- CONFIG ------------- */
+const WEBAPP_URL = "REPLACE_WITH_YOUR_WEBAPP_URL"; // e.g. https://script.google.com/macros/s/.../exec
+/* ---------------------------------- */
 
-let canvasParent;
-let sprites = []; // {img, x,y,w,h, vx, vy, name, msg, ts, id, angle, noiseOffX, noiseOffY}
-const STORAGE_KEY = 'crane_hunt_uploads_v1';
+const CHIME_FREQ = 880; // chime frequency
+let synthCtx;
 
-function setup() {
-  canvasParent = select('#canvas-holder');
-  const cnv = createCanvas(canvasParent.width, 600);
-  cnv.parent('canvas-holder');
-  pixelDensity(1);
-  // load saved
-  loadFromStorage();
-}
-
-function windowResized(){
-  const parentWidth = canvasParent.width;
-  resizeCanvas(parentWidth, max(380, Math.floor(window.innerHeight * 0.6)));
-}
-
-function draw() {
-  background(250, 255, 253);
-  // subtle gradient
-  for(let i=0;i<height;i++){
-    let t = map(i,0,height,0,1);
-    let r = lerp(230,255,t);
-    let g = lerp(245,255,t);
-    let b = lerp(242,255,t);
-    stroke(r,g,b);
-    line(0,i,width,i);
-  }
-
-  // Update & draw sprites
-  for(let i = 0; i < sprites.length; i++){
-    const s = sprites[i];
-
-    // gentle Perlin noise velocity
-    s.noiseOffX += 0.003 + (i%3)*0.0005;
-    s.noiseOffY += 0.003 + (i%4)*0.0003;
-    const nx = noise(s.noiseOffX, frameCount*0.001);
-    const ny = noise(s.noiseOffY, frameCount*0.001 + 1000);
-    s.vx = map(nx,0,1,-0.6,0.6) + s.vx*0.98;
-    s.vy = map(ny,0,1,-0.4,0.4) + s.vy*0.98;
-
-    s.x += s.vx;
-    s.y += s.vy;
-    s.angle += 0.005 * ( (i%2)?1:-1 );
-
-    // edge bounce
-    if(s.x < s.w*0.4){ s.x = s.w*0.4; s.vx *= -0.7; }
-    if(s.x > width - s.w*0.4){ s.x = width - s.w*0.4; s.vx *= -0.7; }
-    if(s.y < s.h*0.4){ s.y = s.h*0.4; s.vy *= -0.7; }
-    if(s.y > height - s.h*0.4){ s.y = height - s.h*0.4; s.vy *= -0.7; }
-
-    // mild separation to avoid overlap
-    for(let j=0;j<sprites.length;j++){
-      if(i===j) continue;
-      const o = sprites[j];
-      const dx = s.x - o.x;
-      const dy = s.y - o.y;
-      const d = sqrt(dx*dx+dy*dy);
-      const minD = (s.w + o.w)*0.28;
-      if(d < minD && d > 0.1){
-        const push = (minD - d) * 0.02;
-        s.x += (dx/d) * push;
-        s.y += (dy/d) * push;
-      }
-    }
-
-    // draw with rotation
-    push();
-    translate(s.x, s.y);
-    rotate(s.angle);
-    imageMode(CENTER);
-    tint(255, 255);
-    image(s.img, 0, 0, s.w, s.h);
-    pop();
-
-    // subtle shadow
-    noStroke();
-    fill(0,3);
-    ellipse(s.x, s.y + s.h*0.48, s.w*0.9, s.h*0.18);
-  }
-
-  // draw count
-  select('#count').html(sprites.length);
-}
-
-/* ================
-   Input handling
-   ================ */
-
-document.getElementById('addBtn').addEventListener('click', async (ev) => {
-  const fileEl = document.getElementById('photo');
+/* ---------- uploader logic ---------- */
+document.getElementById('uploadBtn').addEventListener('click', async () => {
+  const crane = document.getElementById('crane').value.trim();
   const name = document.getElementById('name').value.trim();
-  const msg  = document.getElementById('message').value.trim();
-  const status = document.getElementById('statusHint');
+  const message = document.getElementById('message').value.trim();
+  const fileInput = document.getElementById('file');
+  const status = document.getElementById('status');
 
-  if(!fileEl.files[0]){ status.innerText = 'Please choose a photo.'; return; }
-  status.innerText = 'Loading photo...';
+  if (!crane) { status.innerText = 'Status: Enter a crane ID (C001)'; return; }
+  if (!fileInput.files.length) { status.innerText = 'Status: Select a photo to upload'; return; }
 
-  const file = fileEl.files[0];
+  status.innerText = 'Status: Reading file...';
+  const file = fileInput.files[0];
   const dataURL = await fileToDataURL(file);
-  // load into p5 image
-  loadImage(dataURL, (img) => {
-    // scale to sensible size
-    const maxDim = 160;
-    let w = img.width;
-    let h = img.height;
-    const scale = min(maxDim/w, maxDim/h, 1);
-    w = Math.round(w * scale);
-    h = Math.round(h * scale);
 
-    // create sprite
-    const s = {
-      id: 'crane_' + Date.now() + '_' + floor(random(1000)),
-      img: img,
-      x: random(w/2 + 20, width - w/2 - 20),
-      y: random(h/2 + 20, height - h/2 - 20),
-      w: w,
-      h: h,
-      vx: random(-0.3,0.3),
-      vy: random(-0.2,0.2),
-      angle: random(-0.5,0.5),
-      noiseOffX: random(1000),
-      noiseOffY: random(2000),
-      name: name || '',
-      msg: msg || '',
-      ts: (new Date()).toISOString(),
-      dataURL: dataURL
-    };
+  // Build payload
+  const payload = {
+    action: 'upload',
+    crane: crane,
+    name: name,
+    message: message,
+    imageData: dataURL
+  };
 
-    sprites.push(s);
-    saveToStorage();
-    status.innerText = 'Added!';
-    setTimeout(()=> status.innerText = '', 1500);
-    // reset fields
-    document.getElementById('photo').value = '';
-    document.getElementById('name').value = '';
-    document.getElementById('message').value = '';
-  }, (err) => {
-    status.innerText = 'Could not load image.';
+  status.innerText = 'Status: Uploading...';
+  try {
+    const resp = await fetch(WEBAPP_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const json = await resp.json();
+    if (json.success) {
+      status.innerText = 'Status: Uploaded — saved to Drive.';
+      // refresh sketch data
+      await loadEntriesThenUpdate();
+      // clear form lightly
+      document.getElementById('file').value = '';
+      setTimeout(()=> { status.innerText = 'Status: idle'; }, 2000);
+    } else {
+      status.innerText = 'Status: Upload failed: ' + (json.error || 'unknown');
+    }
+  } catch (err) {
     console.error(err);
-  });
+    status.innerText = 'Status: Upload error (see console)';
+  }
 });
 
-// Convert file to DataURL
-function fileToDataURL(file){
+function fileToDataURL(file) {
   return new Promise((resolve, reject) => {
     const fr = new FileReader();
     fr.onload = () => resolve(fr.result);
@@ -248,153 +122,220 @@ function fileToDataURL(file){
   });
 }
 
-// click to open popup
-function mousePressed(){
-  // check sprites from top to bottom (reverse order)
-  for(let i = sprites.length - 1; i >= 0; i--){
+/* ---------- p5 sketch + scene ---------- */
+let sprites = []; // will hold {img, x,y,w,h, vx, vy, angle, name,msg,ts, id, trail}
+let canvasParent;
+let cnv;
+
+function loadEntriesThenUpdate(){
+  // fetch list via ?action=list
+  return fetch(`${WEBAPP_URL}?action=list`)
+    .then(res => res.json())
+    .then(j => {
+      if (!j.success) return;
+      // transform into sprite data (but keep existing sprites where same photo URL)
+      const items = j.items || [];
+      // We'll create new sprites for items that have a photo_url
+      const newPhotos = items.filter(it => it.photo_url).map(it => ({
+        photo_url: it.photo_url,
+        crane_id: it.crane_id || '',
+        name: it.name || '',
+        message: it.message || '',
+        ts: it.timestamp || it.timestamp // keep whichever
+      }));
+      // Remove duplicates by URL
+      const unique = [];
+      const seen = new Set();
+      newPhotos.forEach(p => {
+        if (p.photo_url && !seen.has(p.photo_url)) { seen.add(p.photo_url); unique.push(p); }
+      });
+      // Load images (asynchronously) and add sprites for those not present
+      unique.forEach(p => {
+        if (!sprites.find(s => s.sourceUrl === p.photo_url)) {
+          // load as p5 Image using loadImage
+          loadImage(p.photo_url, img => {
+            // scale
+            const maxDim = 160;
+            let w = img.width, h = img.height;
+            const scale = min(maxDim/w, maxDim/h, 1);
+            w = Math.round(w * scale); h = Math.round(h * scale);
+            const s = {
+              id: 'srv_' + Math.floor(Math.random()*999999),
+              sourceUrl: p.photo_url,
+              img: img,
+              x: random(w/2 + 20, width - w/2 - 20),
+              y: random(h/2 + 20, height - h/2 - 20),
+              w: w, h: h,
+              vx: random(-0.6,0.6), vy: random(-0.4,0.4),
+              angle: random(-0.3,0.3),
+              noiseX: random(1000), noiseY: random(2000),
+              name: p.name || p.crane_id || '',
+              msg: p.message || '',
+              ts: p.ts || (new Date()).toISOString(),
+              trail: [] // array of {x,y,life}
+            };
+            sprites.push(s);
+          }, err => {
+            console.warn('img load err', p.photo_url, err);
+          });
+        }
+      });
+    }).catch(err => {
+      console.error('list fetch err', err);
+    });
+}
+
+function setup() {
+  canvasParent = select('#canvas-container');
+  cnv = createCanvas(canvasParent.width, 540);
+  cnv.parent('canvas-container');
+  pixelDensity(1);
+  // initial load
+  loadEntriesThenUpdate();
+  // periodic refresh
+  setInterval(loadEntriesThenUpdate, 20000); // every 20s
+}
+
+function windowResized(){
+  const w = canvasParent.width;
+  resizeCanvas(w, max(360, floor(windowHeight * 0.6)));
+}
+
+function draw() {
+  // background soft gradient
+  for (let i = 0; i < height; i++) {
+    const t = map(i, 0, height, 0, 1);
+    const r = lerp(248, 255, t);
+    const g = lerp(252, 255, t);
+    const b = lerp(251, 255, t);
+    stroke(r, g, b);
+    line(0, i, width, i);
+  }
+
+  // update & render sprites
+  for (let i = 0; i < sprites.length; i++) {
     const s = sprites[i];
-    // transform mouse into sprite local space (account for rotation)
-    const dx = mouseX - s.x;
-    const dy = mouseY - s.y;
-    const distToCenter = sqrt(dx*dx + dy*dy);
-    if(distToCenter < max(s.w, s.h) * 0.6){
-      // open popup for this sprite
-      openPopup(s);
-      break;
+    // Perlin noise drift
+    s.noiseX += 0.003 + (i%4)*0.0005;
+    s.noiseY += 0.003 + (i%3)*0.0006;
+    const nx = noise(s.noiseX + frameCount*0.001);
+    const ny = noise(s.noiseY + 1000 + frameCount*0.001);
+    s.vx += map(nx,0,1,-0.25,0.25);
+    s.vy += map(ny,0,1,-0.16,0.16);
+    // cap velocities
+    s.vx *= 0.96; s.vy *= 0.96;
+    s.x += s.vx; s.y += s.vy;
+    s.angle += 0.002 * ((i%2) ? 1 : -1);
+
+    // keep inside canvas
+    if (s.x < s.w*0.45) { s.x = s.w*0.45; s.vx *= -0.6; }
+    if (s.x > width - s.w*0.45) { s.x = width - s.w*0.45; s.vx *= -0.6; }
+    if (s.y < s.h*0.45) { s.y = s.h*0.45; s.vy *= -0.6; }
+    if (s.y > height - s.h*0.45) { s.y = height - s.h*0.45; s.vy *= -0.6; }
+
+    // trails: push current pos
+    s.trail.push({x: s.x, y: s.y, life: 1.0});
+    if (s.trail.length > 20) s.trail.shift();
+    // draw trail particles (sparkly)
+    noStroke();
+    for (let t = 0; t < s.trail.length; t++) {
+      const p = s.trail[t];
+      const alpha = map(t, 0, s.trail.length-1, 20, 180);
+      fill(255, 230, 200, alpha * 0.9);
+      ellipse(p.x, p.y, (s.w*0.18) * (t/s.trail.length + 0.2));
+      fill(255,255,255, alpha*0.6);
+      ellipse(p.x + 3*Math.sin(t*0.6 + frameCount*0.02), p.y + 3*Math.cos(t*0.4 + frameCount*0.02), 2);
+    }
+
+    // draw sprite image
+    push();
+    translate(s.x, s.y);
+    rotate(s.angle);
+    imageMode(CENTER);
+    image(s.img, 0, 0, s.w, s.h);
+    pop();
+
+    // subtle shadow
+    noStroke();
+    fill(0, 10);
+    ellipse(s.x, s.y + s.h*0.48, s.w*0.9, s.h*0.18);
+  }
+
+  // draw count
+  fill(10, 60);
+  noStroke();
+  textSize(13);
+  textAlign(LEFT, TOP);
+  text(`${sprites.length} cranes`, 8, 8);
+}
+
+/* --------- interactions: clicking and dragging ---------- */
+let dragTarget = null;
+let offsetX = 0, offsetY = 0;
+function mousePressed() {
+  // find topmost sprite under mouse
+  for (let i = sprites.length-1; i >= 0; i--) {
+    const s = sprites[i];
+    const dx = mouseX - s.x, dy = mouseY - s.y;
+    const d = sqrt(dx*dx + dy*dy);
+    if (d < max(s.w, s.h)*0.6) {
+      // if click -> start drag, and also play chime & show small info bubble (native alert)
+      dragTarget = s;
+      offsetX = s.x - mouseX;
+      offsetY = s.y - mouseY;
+      playChime();
+      showInfoBubble(s);
+      return false; // prevent default
     }
   }
 }
 
-/* ======================
-   Popup
-   ====================== */
-function openPopup(s){
-  const popup = document.getElementById('popup');
-  const content = document.getElementById('popupContent');
-  content.innerHTML = `
-    <div style="text-align:center">
-      <img src="${s.dataURL}" style="max-width:100%;border-radius:8px">
-      <h3 style="margin:8px 0 4px">${escapeHtml(s.name) || 'Unnamed crane'}</h3>
-      <p style="margin:0 0 6px;color:#334">${escapeHtml(s.msg) || '<i>No message</i>'}</p>
-      <small style="color:#667">Found: ${new Date(s.ts).toLocaleString()}</small>
-      <div style="margin-top:10px"><button id="downloadOne" class="close-btn">Download</button></div>
-    </div>
-  `;
-  // download action
-  setTimeout(()=>{ // ensure element exists
-    document.getElementById('downloadOne').onclick = () => {
-      downloadDataURL(s.dataURL, s.id + '.png');
-    };
-  },50);
-
-  popup.style.display = 'block';
-}
-
-document.getElementById('closePopup').addEventListener('click', () => {
-  document.getElementById('popup').style.display = 'none';
-});
-
-/* ======================
-   Local storage
-   ====================== */
-function saveToStorage(){
-  // store minimal data (dataURL + metadata)
-  const out = sprites.map(s => ({
-    id: s.id, dataURL: s.dataURL, name: s.name, msg: s.msg, ts: s.ts
-  }));
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(out));
-  } catch(e){
-    console.warn('Could not save to localStorage', e);
+function mouseDragged() {
+  if (dragTarget) {
+    dragTarget.x = mouseX + offsetX;
+    dragTarget.y = mouseY + offsetY;
   }
 }
 
-function loadFromStorage(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(!raw) return;
-  try{
-    const arr = JSON.parse(raw);
-    arr.forEach(async item => {
-      // re-create image objects
-      loadImage(item.dataURL, (img) => {
-        const maxDim = 160;
-        let w = img.width;
-        let h = img.height;
-        const scale = min(maxDim/w, maxDim/h, 1);
-        w = Math.round(w * scale);
-        h = Math.round(h * scale);
-
-        const s = {
-          id: item.id,
-          img: img,
-          x: random(w/2 + 20, width - w/2 - 20),
-          y: random(h/2 + 20, height - h/2 - 20),
-          w: w,
-          h: h,
-          vx: random(-0.3,0.3),
-          vy: random(-0.2,0.2),
-          angle: random(-0.5,0.5),
-          noiseOffX: random(1000),
-          noiseOffY: random(2000),
-          name: item.name || '',
-          msg: item.msg || '',
-          ts: item.ts || (new Date()).toISOString(),
-          dataURL: item.dataURL
-        };
-        sprites.push(s);
-      });
-    });
-  }catch(e){ console.warn('parse err', e) }
+function mouseReleased() {
+  dragTarget = null;
 }
 
-/* ======================
-   Download/export helpers
-   ====================== */
-document.getElementById('downloadJSON').addEventListener('click', () => {
-  const payload = sprites.map(s => ({
-    id: s.id, name: s.name, msg: s.msg, ts: s.ts, dataURL: s.dataURL
-  }));
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'crane_submissions.json'; document.body.appendChild(a); a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },200);
+/* simple info small overlay */
+function showInfoBubble(s) {
+  const info = `${s.name || 'Unnamed'}\n${s.msg || ''}\nFound: ${new Date(s.ts).toLocaleString()}`;
+  // small overlay using alert for simplicity
+  alert(info);
+}
+
+/* --------- chime (WebAudio) ---------- */
+function playChime() {
+  try {
+    if (!synthCtx) synthCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = synthCtx.currentTime;
+    const o = synthCtx.createOscillator();
+    const g = synthCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = CHIME_FREQ;
+    g.gain.value = 0;
+    o.connect(g);
+    g.connect(synthCtx.destination);
+    o.start(t);
+    // quick envelope
+    g.gain.linearRampToValueAtTime(0.15, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+    o.stop(t + 0.8);
+  } catch (e) {
+    console.warn('audio fail', e);
+  }
+}
+
+/* ------------- manual refresh ------------- */
+document.getElementById('refreshBtn').addEventListener('click', async () => {
+  document.getElementById('status').innerText = 'Status: refreshing...';
+  await loadEntriesThenUpdate();
+  document.getElementById('status').innerText = 'Status: idle';
 });
-
-document.getElementById('clearAll').addEventListener('click', () => {
-  if(!confirm('Clear all locally stored cranes? This removes them from this browser only.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  sprites = [];
-});
-
-/* download helper */
-function downloadDataURL(dataURL, filename){
-  const a = document.createElement('a');
-  a.href = dataURL;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
-/* small util */
-function escapeHtml(str){
-  if(!str) return '';
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#039;');
-}
-
-/* ================
-   boot
-   ================ */
-(function initSizes(){
-  // ensure p5 canvas parent has width value before setup uses it
-  setTimeout(()=>{ if(windowWidth>0) redraw(); }, 200);
-})();
 </script>
 </body>
 </html>
