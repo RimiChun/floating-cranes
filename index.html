@@ -171,46 +171,26 @@ function makeSpriteFromP5Image(img, meta){
 async function loadServerImages(){
   logStatus('Loading server images...');
   const list = await fetchDriveList();
-  // normalize to array of direct urls
-  const urls = list.map(u => {
-    // if item is object (Drive file object) try to extract url
-    if (typeof u === 'string') return u;
-    if (u && u.photo_url) return u.photo_url;
-    if (u && u.url) return u.url;
-    return null;
-  }).filter(Boolean);
+  const urls = list.filter(Boolean); // all are direct now
 
-  // For each url not already present, load an image and add sprite
   for (const url of urls){
     if (sprites.find(s => s.url === url)) continue;
-    // Drive file URLs sometimes redirect to a Drive preview page. To force direct image content,
-    // convert "https://drive.google.com/file/d/FILEID/view?usp=sharing" to:
-    // "https://drive.google.com/uc?export=view&id=FILEID"
-    let direct = url;
-    const m = url.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
-    if (m && m[1]) {
-      direct = `https://drive.google.com/uc?export=view&id=${m[1]}`;
-    } else {
-      // also handle "open?id=ID" style
-      const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
-      if (m2 && m2[1]) direct = `https://drive.google.com/uc?export=view&id=${m2[1]}`;
-    }
-    // loadImage async
     try {
       await new Promise((res, rej) => {
-        loadImage(direct, p5img => {
-          const spr = makeSpriteFromP5Image(p5img, { url: url });
+        loadImage(url, img => {
+          const spr = makeSpriteFromP5Image(img, { url });
           sprites.push(spr);
           res();
         }, err => {
           console.warn('img load fail', url, err);
-          res(); // don't reject, just continue
+          res();
         });
       });
     } catch(e){ console.warn('load err', e); }
   }
   logStatus('idle');
 }
+
 
 /* draw loop */
 function draw(){
